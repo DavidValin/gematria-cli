@@ -8,15 +8,15 @@ Use gematria directrly from your terminal!
 
 ```
 [x] Search a word or phrase and find its hebrew, english and simple gematria value
-[x] When retrieving a gematria value for a search term, find previous search terms with the same value
+[x] When retrieving a gematria value for a search term, find previous search terms with the same gematria value
 [x] Generate a visual graph with searched terms which have a relation between each other in hebrew, english or simple gematria tables
 [x] Store all searches in a sqlite database in your user home directory (g.db filename)
 ```
 
 #### Install
 
-You need to have installed `ruby`. Once installed run:
-`sudo make install`
+You need to have `ruby` and `graphviz` installed. Once installed run:
+* `sudo make install`
 
 This will install a command called `g`
 
@@ -26,15 +26,15 @@ This will install a command called `g`
 
 If you want to find the gematria values for a specific term (word or phrase) use `g <term>`; example:
 
-`g be smart`
-`g poseidon`
-`g old friends`
+* `g be smart`
+* `g poseidon`
+* `g old friends`
 
-The previous 3 terms match their hebrew gematrix value.
+The previous 3 terms match their hebrew gematria value.
 
 ##### Search a term
 
-If you want to generate a graphviz graph in PNG rendering its relations, perform a new search and add the `--graph` parameter; example:
+If you want to generate a graphviz graph in PNG which renders relations based on the gematria values of all the searches stored in the database, perform a new search and add the `--graph` parameter; example:
 
 `g isis --graph`
 
