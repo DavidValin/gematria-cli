@@ -9,8 +9,7 @@ require 'ruby-graphviz'
 
 ARGV.delete(0)
 EXPORT_GRAPH = ARGV.include? "--graph"
-search_query_tmp = ARGV.select {|s| s != "--graph"}
-search_query = search_query_tmp.join(" ")
+ONLY_EXPORT = ARGV.size == 1 && EXPORT_GRAPH
 
 DB = SQLite3::Database.open Dir.home+'/g.db'
 DB.execute "CREATE TABLE IF NOT EXISTS searches(search TEXT, hbr TEXT, eng TEXT, smp TEXT)"
@@ -102,55 +101,60 @@ Gematria::Tables.add_table :smp,
   'y' => 25,
   'z' => 26
 
-name_hbr = Gematria::Calculator.new search_query, :hbr
-name_eng = Gematria::Calculator.new search_query, :eng
-name_smp = Gematria::Calculator.new search_query, :smp
-puts "\n"
-puts "hebrew: \t" + name_hbr.converted.to_s
-puts " english: \t" + name_eng.converted.to_s
-puts " simple: \t" + name_smp.converted.to_s
-puts "\n"
+if not ONLY_EXPORT
+  search_query_tmp = ARGV.select {|s| s != "--graph"}
+  search_query = search_query_tmp.join(" ")
 
-# Track this search
-DB.execute "INSERT INTO searches (search, hbr, eng, smp) VALUES (?, ?, ?, ?)",
-  search_query,
-  name_hbr.converted.to_s,
-  name_eng.converted.to_s,
-  name_smp.converted.to_s
+  name_hbr = Gematria::Calculator.new search_query, :hbr
+  name_eng = Gematria::Calculator.new search_query, :eng
+  name_smp = Gematria::Calculator.new search_query, :smp
+  puts "\n"
+  puts "hebrew: \t" + name_hbr.converted.to_s
+  puts " english: \t" + name_eng.converted.to_s
+  puts " simple: \t" + name_smp.converted.to_s
+  puts "\n"
 
-# Find other searches with the same value
+  # Track this search
+  DB.execute "INSERT INTO searches (search, hbr, eng, smp) VALUES (?, ?, ?, ?)",
+    search_query,
+    name_hbr.converted.to_s,
+    name_eng.converted.to_s,
+    name_smp.converted.to_s
 
-# ... in hebrew table
-results_hbr = DB.query "SELECT DISTINCT search FROM searches WHERE hbr=? and search!=?",
-  name_hbr.converted.to_s,
-  search_query
+  # Find other searches with the same value
 
-# ... in english table
-results_eng = DB.query "SELECT DISTINCT search FROM searches WHERE eng=? and search!=?",
-  name_eng.converted.to_s,
-  search_query
+  # ... in hebrew table
+  results_hbr = DB.query "SELECT DISTINCT search FROM searches WHERE hbr=? and search!=?",
+    name_hbr.converted.to_s,
+    search_query
 
-# ... in simple table
-results_smp = DB.query "SELECT DISTINCT search FROM searches WHERE smp=? and search!=?",
-  name_smp.converted.to_s,
-  search_query
+  # ... in english table
+  results_eng = DB.query "SELECT DISTINCT search FROM searches WHERE eng=? and search!=?",
+    name_eng.converted.to_s,
+    search_query
 
-puts "  Other previous searches matching numerical value:\n"
-results_hbr.each {|s| puts "    "+s.join('')+" (hebrew value)"}
-results_eng.each {|s| puts "    "+s.join('')+" (english value)"}
-results_smp.each {|s| puts "    "+s.join('')+" (simple value)"}
-puts "\n"
+  # ... in simple table
+  results_smp = DB.query "SELECT DISTINCT search FROM searches WHERE smp=? and search!=?",
+    name_smp.converted.to_s,
+    search_query
+
+  puts "  Other previous searches matching numerical value:\n"
+  results_hbr.each {|s| puts "    "+s.join('')+" (hebrew value)"}
+  results_eng.each {|s| puts "    "+s.join('')+" (english value)"}
+  results_smp.each {|s| puts "    "+s.join('')+" (simple value)"}
+  puts "\n"
+end
 
 # Export a png graphviz graph for any of "hbr", "eng" or "smp" gematria tables
 def export_graph(lang)
-  g = GraphViz.new(:G, :type => :digraph)
   all_searches = DB.query "SELECT DISTINCT search, "+lang+" FROM searches"
   groups = all_searches.group_by do |row|
     row[1]
   end
   # puts all_searches
-  groups.keys.each do |lang|
-    terms_groups = groups[lang].map do |row|
+  groups.keys.each do |key|
+    g = GraphViz.new(:G, :type => :digraph)
+    terms_groups = groups[key].map do |row|
       row[0]
     end
     if terms_groups.length > 1
@@ -163,8 +167,8 @@ def export_graph(lang)
         g.add_edges(term_left, term_right, :dir => :none) if term_left != term_right
       end
     end
+    g.output(:png => "#{lang}_#{groups[key][0][1]}.png")
   end
-  g.output(:png => lang+".png")
 end
 
 # Export graphviz hierarchy graphs for hebrew, english and simple gematria tables
