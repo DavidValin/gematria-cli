@@ -167,7 +167,9 @@ def export_graph(lang)
         g.add_edges(term_left, term_right, :dir => :none) if term_left != term_right
       end
     end
-    g.output(:png => "#{lang}_#{groups[key][0][1]}.png")
+    if terms_groups.length > 1
+      g.output(:png => "#{lang}_#{groups[key][0][1]}.png")
+    end
   end
 end
 
