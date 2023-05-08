@@ -16,7 +16,7 @@ Use gematria directrly from your terminal!
 #### Install
 
 You need to have `ruby` and `graphviz` installed. Once installed run:
-* `sudo make install`
+* `sudo make`
 
 This will install a command called `g`
 
