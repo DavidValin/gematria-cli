@@ -34,14 +34,11 @@ The previous 3 terms match their hebrew gematria value.
 
 ##### Search a term
 
-If you want to generate a graphviz graph in PNG which renders relations based on the gematria values of all the searches stored in the database, perform a new search and add the `--graph` parameter; example:
+If you want to generate a graphviz graph in PNG which renders relations based on the gematria values of all the searches stored in the database call:
 
-`g isis --graph`
+`g --graph`
 
-This will create 3 files in the current directory:
-* `hbr.png` (graphviz graph with hebrew gematria value matches)
-* `eng.png` (graphviz graph with english gematria value matches)
-* `smp.png` (graphviz graph with simple gematria value matches)
+This will create one png file for each language + numerical match value (using hebrew, english and simple gematria tables)
 
 ### About mapping tables
 
