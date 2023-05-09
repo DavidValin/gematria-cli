@@ -9,7 +9,12 @@ require 'ruby-graphviz'
 
 ARGV.delete(0)
 EXPORT_GRAPH = ARGV.include? "--graph"
-ONLY_EXPORT = ARGV.size == 1 && EXPORT_GRAPH
+EXPORT_TEXT = ARGV.include? "--text"
+
+ONLY_EXPORT =
+  (ARGV.size == 1 && EXPORT_GRAPH) ||
+  (ARGV.size == 1 && EXPORT_TEXT) ||
+  (ARGV.size == 2 && (EXPORT_GRAPH && EXPORT_TEXT))
 
 DB = SQLite3::Database.open Dir.home+'/g.db'
 DB.execute "CREATE TABLE IF NOT EXISTS searches(search TEXT, hbr TEXT, eng TEXT, smp TEXT)"
@@ -146,37 +151,58 @@ if not ONLY_EXPORT
 end
 
 # Export a png graphviz graph for any of "hbr", "eng" or "smp" gematria tables
-def export_graph(lang)
+def export(lang)
   all_searches = DB.query "SELECT DISTINCT search, "+lang+" FROM searches"
   groups = all_searches.group_by do |row|
     row[1]
   end
+  if EXPORT_TEXT
+    file = File.open("gematria_#{lang}.txt", "w")
+  end
   # puts all_searches
   groups.keys.each do |key|
-    g = GraphViz.new(:G, :type => :digraph)
     terms_groups = groups[key].map do |row|
       row[0]
     end
     if terms_groups.length > 1
+      if EXPORT_GRAPH
+        g = GraphViz.new(:G, :type => :digraph)
+      end
+      if EXPORT_TEXT
+        file.write "#{key} (#{lang})\n"
+      end
       terms_groups.each do |term|
-        g.add_nodes(term)
+        if EXPORT_GRAPH
+          g.add_nodes(term)
+        end
+        if EXPORT_TEXT
+          file.write "\t\t#{term}\n"
+        end
+      end
+      if EXPORT_GRAPH
+        terms_groups.each do |term_left|
+          terms_groups.each do |term_right|
+            term_left != term_right &&
+              g.add_edges(term_left, term_right, :dir => :none)
+          end
+        end
+        filename = "#{lang}_#{groups[key][0][1]}"
+        g.output(:png => "#{filename}.png")
+      end
+      if EXPORT_TEXT
+        file.write "\n\n"
       end
     end
-    terms_groups.each do |term_left|
-      terms_groups.each do |term_right|
-        g.add_edges(term_left, term_right, :dir => :none) if term_left != term_right
-      end
-    end
-    if terms_groups.length > 1
-      g.output(:png => "#{lang}_#{groups[key][0][1]}.png")
-    end
+  end
+  if EXPORT_TEXT
+    file.close
   end
 end
 
 # Export graphviz hierarchy graphs for hebrew, english and simple gematria tables
 # using all searches stored in the database
-if EXPORT_GRAPH
-  export_graph("hbr")
-  export_graph("eng")
-  export_graph("smp")
+if EXPORT_GRAPH || EXPORT_TEXT
+  export("hbr")
+  export("eng")
+  export("smp")
 end

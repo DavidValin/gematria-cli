@@ -9,7 +9,8 @@ Use gematria directrly from your terminal!
 ```
 [x] Search a word or phrase and find its hebrew, english and simple gematria value
 [x] When retrieving a gematria value for a search term, find previous search terms with the same gematria value
-[x] Generate a visual graph with searched terms which have a relation between each other in hebrew, english or simple gematria tables
+[x] Export a visual graph with searched terms which match their hebrew, english or simple gematria table values (graphviz)
+[x] Export a txt file with searched terms which match their hebrew, english or simple gematria table values
 [x] Store all searches in a sqlite database in your user home directory (g.db filename)
 ```
 
@@ -32,13 +33,17 @@ If you want to find the gematria values for a specific term (word or phrase) use
 
 The previous 3 terms match their hebrew gematria value.
 
-##### Search a term
+##### Export relations
 
 If you want to generate a graphviz graph in PNG which renders relations based on the gematria values of all the searches stored in the database call:
 
 `g --graph`
 
 This will create one png file for each language + numerical match value (using hebrew, english and simple gematria tables)
+
+You can also export it as text using:
+
+`g --text`
 
 ### About mapping tables
 
